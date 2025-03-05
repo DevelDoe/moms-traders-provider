@@ -1,66 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - MTP Server</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin: 10px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        .logout-btn {
-            background-color: #dc3545;
-        }
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
-    </style>
-</head>
-<body>
-    <h1>MTP Admin Panel</h1>
-    <button id="runScanner">Run Stock Scanner</button>
-    <button id="logout" class="logout-btn">Logout</button>
-    <p id="status"></p>
-
-    <script>
-        document.getElementById("runScanner").addEventListener("click", async () => {
-            document.getElementById("status").innerText = "Running scanner...";
-            try {
-                const response = await fetch("/run-scanner");
-                const data = await response.json();
-                document.getElementById("status").innerText = data.message;
-            } catch (error) {
-                document.getElementById("status").innerText = "Error running scanner.";
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Admin Panel - MTP Server</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin: 50px;
             }
-        });
-
-        document.getElementById("logout").addEventListener("click", async () => {
-            try {
-                await fetch("/logout");
-                window.location.href = "/login.html"; // Redirect to login page
-            } catch (error) {
-                console.error("Logout failed", error);
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
             }
-        });
-    </script>
-</body>
+            button:hover {
+                background-color: #218838;
+            }
+            #status,
+            #scanners,
+            #pool {
+                margin-top: 20px;
+                font-size: 18px;
+            }
+            .scanner {
+                background-color: #f4f4f4;
+                margin: 10px auto;
+                padding: 10px;
+                width: 80%;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>MTP Admin Panel</h1>
+
+        <button id="runScanner">Refresh Symbols</button>
+        <button id="logout" class="logout-btn">Logout</button>
+        <p id="status"></p>
+
+        <h2>Scanners</h2>
+        <div id="scanners">Loading...</div>
+
+        <h2>Symbol Pool</h2>
+        <div id="pool">Loading...</div>
+
+        <script>
+            document.getElementById("runScanner").addEventListener("click", async () => {
+                document.getElementById("status").innerText = "Running scanner...";
+                try {
+                    const response = await fetch("/refresh-pool");
+                    const data = await response.json();
+                    document.getElementById("status").innerText = data.message;
+                } catch (error) {
+                    console.error("Error running scanner:", error);
+                    document.getElementById("status").innerText = "Error running scanner. Check console.";
+                }
+            });
+
+            document.getElementById("logout").addEventListener("click", async () => {
+                try {
+                    await fetch("/logout");
+                    window.location.href = "/login.html"; // Redirect to login page
+                } catch (error) {
+                    console.error("Logout failed", error);
+                }
+            });
+
+            async function fetchData() {
+                try {
+                    // Fetch Scanners
+                    const scannerRes = await fetch("/scanners");
+                    if (!scannerRes.ok) throw new Error(`HTTP Error: ${scannerRes.status}`);
+                    const scannerData = await scannerRes.json();
+
+                    const scannersDiv = document.getElementById("scanners");
+                    scannersDiv.innerHTML = "";
+
+                    scannerData.scanners.forEach((scanner) => {
+                        const div = document.createElement("div");
+                        div.className = "scanner";
+                        div.innerHTML = `<strong>ID:</strong> ${scanner.id} <br> <strong>Symbols:</strong> ${scanner.symbols.join(", ")}`;
+                        scannersDiv.appendChild(div);
+                    });
+
+                    // Fetch Pool
+                    const poolRes = await fetch("/pool");
+                    if (!poolRes.ok) throw new Error(`HTTP Error: ${poolRes.status}`);
+                    const poolData = await poolRes.json();
+
+                    document.getElementById("pool").innerHTML = `<strong>Total Symbols:</strong> ${poolData.total} <br> <strong>Symbols:</strong> ${poolData.symbols.join(", ")}`;
+                } catch (error) {
+                    console.error("Error fetching scanner/pool data:", error);
+                    document.getElementById("scanners").innerText = "Error loading scanner data.";
+                    document.getElementById("pool").innerText = "Error loading pool data.";
+                }
+            }
+
+            // Fetch data initially and refresh every 30 seconds
+            fetchData();
+            setInterval(fetchData, 30000);
+        </script>
+    </body>
 </html>
