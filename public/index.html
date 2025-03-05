@@ -52,14 +52,22 @@
 
         <script>
             document.getElementById("runScanner").addEventListener("click", async () => {
-                document.getElementById("status").innerText = "Running scanner...";
+                document.getElementById("status").innerText = "Symbols updating...";
+                document.getElementById("scanners").innerText = "Loading symbols...";
+                document.getElementById("pool").innerText = "Loading symbols...";
+
                 try {
                     const response = await fetch("/refresh-pool");
                     const data = await response.json();
                     document.getElementById("status").innerText = data.message;
+
+                    // ✅ Wait 2 seconds for the backend to update before fetching fresh data
+                    setTimeout(fetchData, 2000);
                 } catch (error) {
                     console.error("Error running scanner:", error);
-                    document.getElementById("status").innerText = "Error running scanner. Check console.";
+                    document.getElementById("status").innerText = "Error updating symbols.";
+                    document.getElementById("scanners").innerText = "Error loading scanner data.";
+                    document.getElementById("pool").innerText = "Error loading pool data.";
                 }
             });
 
@@ -95,6 +103,9 @@
                     const poolData = await poolRes.json();
 
                     document.getElementById("pool").innerHTML = `<strong>Total Symbols:</strong> ${poolData.total} <br> <strong>Symbols:</strong> ${poolData.symbols.join(", ")}`;
+
+                    // ✅ Remove "Symbols updated!" message once data is loaded
+                    document.getElementById("status").innerText = "";
                 } catch (error) {
                     console.error("Error fetching scanner/pool data:", error);
                     document.getElementById("scanners").innerText = "Error loading scanner data.";

@@ -33,27 +33,12 @@ router.get("/refresh-pool", requireAuth, async (req: Request, res: Response) => 
 
     await executeScanner(); // ✅ Wait until symbols are posted
 
-    console.log("Waiting for C server to update data...");
+    console.log("Waiting for server to update data...");
     await new Promise(resolve => setTimeout(resolve, 2000)); // ✅ Delay fetch for 2 sec
 
-    try {
-        console.log("Fetching fresh scanner data...");
-        const scannerRes = await axios.get(`${C_SERVER_URL}/scanners`);
-        console.log("Scanners Response:", scannerRes.data);
-
-        const poolRes = await axios.get(`${C_SERVER_URL}/pool`);
-        console.log("Pool Response:", poolRes.data);
-
-        res.json({
-            message: "Symbols pool refresh executed successfully.",
-            scanners: scannerRes.data,
-            pool: poolRes.data,
-        });
-    } catch (error) {
-        console.error("Error fetching updated scanner data:", error);
-        res.status(500).json({ message: "Scanner executed, but failed to fetch updated data." });
-    }
+    res.json({ message: "Symbols updated!" }); // ✅ Return final message
 });
+
 
 
 // 📌 Fetch scanner statuses from C server
