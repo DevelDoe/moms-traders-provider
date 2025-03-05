@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - MTP Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <h1>MTP Admin Panel</h1>
+    <button id="runScanner">Run Stock Scanner</button>
+    <button id="logout" class="logout-btn">Logout</button>
+    <p id="status"></p>
+
+    <script>
+        document.getElementById("runScanner").addEventListener("click", async () => {
+            document.getElementById("status").innerText = "Running scanner...";
+            try {
+                const response = await fetch("/run-scanner");
+                const data = await response.json();
+                document.getElementById("status").innerText = data.message;
+            } catch (error) {
+                document.getElementById("status").innerText = "Error running scanner.";
+            }
+        });
+
+        document.getElementById("logout").addEventListener("click", async () => {
+            try {
+                await fetch("/logout");
+                window.location.href = "/login.html"; // Redirect to login page
+            } catch (error) {
+                console.error("Logout failed", error);
+            }
+        });
+    </script>
+</body>
+</html>
