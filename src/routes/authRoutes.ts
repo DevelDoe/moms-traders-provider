@@ -29,7 +29,6 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 });
 
 router.get("/logout", (req: Request, res: Response) => {
-    console.log("Logging out...");
 
     const sessionID = req.session.id;
     req.session.destroy((err) => {
