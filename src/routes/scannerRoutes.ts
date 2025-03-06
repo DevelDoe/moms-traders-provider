@@ -27,18 +27,6 @@ router.get("/", requireAuth, (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, "../../public", "index.html"));
 });
 
-// 📌 Route to manually trigger stock data fetching
-router.get("/refresh-pool", requireAuth, async (req: Request, res: Response) => {
-    console.log("Manual execution triggered...");
-
-    await executeScanner(); // ✅ Wait until symbols are posted
-
-    console.log("Waiting for server to update data...");
-    await new Promise(resolve => setTimeout(resolve, 2000)); // ✅ Delay fetch for 2 sec
-
-    res.json({ message: "Symbols updated!" }); // ✅ Return final message
-});
-
 
 
 // 📌 Fetch scanner statuses from C server
@@ -65,10 +53,34 @@ router.get("/pool", requireAuth, async (req: Request, res: Response) => {
     }
 });
 
+// 📌 Route to manually trigger stock data fetching with filters
+router.post("/refresh-pool", requireAuth, async (req: Request, res: Response) => {
+    console.log("Manual execution triggered with filters:", req.body);
 
-// 📌 Scanner execution function
-export async function executeScanner(): Promise<void> {
-    const stockData = await fetchStocks();
+    // Ensure filters exist, otherwise fallback to defaults
+    const filters = req.body || {
+        priceMoreThan: "1",
+        priceLowerThan: "7",
+        volumeMoreThan: "100000",
+        marketCapLowerThan: "30000000",
+        exchange: "NASDAQ",
+        isActivelyTrading: "true",
+        isEtf: "false",
+        isFund: "false",
+    };
+
+    await executeScanner(filters); // ✅ Now executes with filters
+
+    console.log("Waiting for server to update data...");
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    res.json({ message: "Symbols updated!" });
+});
+
+
+// 📌 Scanner execution function (now accepts filters)
+export async function executeScanner(filters: Record<string, any>): Promise<void> {
+    const stockData = await fetchStocks(filters); // ✅ Pass filters
     if (stockData) {
         const simplifiedData = extractSymbols(stockData);
 
@@ -79,6 +91,7 @@ export async function executeScanner(): Promise<void> {
         console.log("Update scanner symbols execution failed.");
     }
 }
+
 
 
 export default router;

@@ -35,10 +35,117 @@
                 width: 80%;
                 border-radius: 5px;
             }
+            .filters-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 20px;
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .filter-group label {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .filter-group input {
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                font-size: 14px;
+                width: 140px;
+                text-align: center;
+            }
+
+            button#applyFilters {
+                padding: 10px 20px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            button#applyFilters:hover {
+                background-color: #0056b3;
+            }
         </style>
     </head>
     <body>
         <h1>MTP Admin Panel</h1>
+
+        <!-- Filters Section -->
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="minPrice">Min Price:</label>
+                <input type="number" id="minPrice" value="1" step="0.01" />
+            </div>
+
+            <div class="filter-group">
+                <label for="maxPrice">Max Price:</label>
+                <input type="number" id="maxPrice" value="7" step="0.01" />
+            </div>
+
+            <div class="filter-group">
+                <label for="minVolume">Min Volume:</label>
+                <input type="number" id="minVolume" value="100000" step="1000" />
+            </div>
+
+            <div class="filter-group">
+                <label for="marketCap">Max Market Cap:</label>
+                <input type="number" id="marketCap" value="30000000" step="1000000" />
+            </div>
+
+            <div class="filter-group">
+                <label for="exchange">Exchange:</label>
+                <select id="exchange">
+                    <option value="NASDAQ">NASDAQ</option>
+                    <option value="NYSE">NYSE</option>
+                    <option value="AMEX">AMEX</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="isActivelyTrading">Active Trading:</label>
+                <select id="isActivelyTrading">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="isEtf">ETF:</label>
+                <select id="isEtf">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="isFund">Fund:</label>
+                <select id="isFund">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+
+            <button id="applyFilters">Apply Filters</button>
+        </div>
 
         <button id="runScanner">Refresh Symbols</button>
         <button id="logout" class="logout-btn">Logout</button>
@@ -51,60 +158,98 @@
         <div id="pool">Loading...</div>
 
         <script>
+            let filters = {
+                priceMoreThan: "1",
+                priceLowerThan: "7",
+                volumeMoreThan: "100000",
+                marketCapLowerThan: "30000000",
+                exchange: "NASDAQ",
+                isActivelyTrading: "true",
+                isEtf: "false",
+                isFund: "false",
+            };
+
+            // Load filters from Local Storage if available
+            function loadFilters() {
+                const savedFilters = JSON.parse(localStorage.getItem("mtpFilters"));
+                if (savedFilters) {
+                    filters = savedFilters;
+                    document.getElementById("minPrice").value = filters.priceMoreThan;
+                    document.getElementById("maxPrice").value = filters.priceLowerThan;
+                    document.getElementById("minVolume").value = filters.volumeMoreThan;
+                    document.getElementById("marketCap").value = filters.marketCapLowerThan;
+                    document.getElementById("exchange").value = filters.exchange;
+                    document.getElementById("isActivelyTrading").value = filters.isActivelyTrading;
+                    document.getElementById("isEtf").value = filters.isEtf;
+                    document.getElementById("isFund").value = filters.isFund;
+                }
+            }
+
+            // Save filters when applying
+            document.getElementById("applyFilters").addEventListener("click", () => {
+                filters = {
+                    priceMoreThan: document.getElementById("minPrice").value,
+                    priceLowerThan: document.getElementById("maxPrice").value,
+                    volumeMoreThan: document.getElementById("minVolume").value,
+                    marketCapLowerThan: document.getElementById("marketCap").value,
+                    exchange: document.getElementById("exchange").value,
+                    isActivelyTrading: document.getElementById("isActivelyTrading").value,
+                    isEtf: document.getElementById("isEtf").value,
+                    isFund: document.getElementById("isFund").value,
+                };
+
+                localStorage.setItem("mtpFilters", JSON.stringify(filters));
+                alert("Filters updated!");
+            });
+
+            // Modify the scanner request to send filters
             document.getElementById("runScanner").addEventListener("click", async () => {
                 document.getElementById("status").innerText = "Symbols updating...";
                 document.getElementById("scanners").innerText = "Loading symbols...";
                 document.getElementById("pool").innerText = "Loading symbols...";
 
                 try {
-                    const response = await fetch("/refresh-pool");
+                    const response = await fetch("/refresh-pool", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(filters), // ✅ Send filters
+                    });
+
                     const data = await response.json();
                     document.getElementById("status").innerText = data.message;
-
-                    // ✅ Wait 2 seconds for the backend to update before fetching fresh data
                     setTimeout(fetchData, 2000);
                 } catch (error) {
                     console.error("Error running scanner:", error);
                     document.getElementById("status").innerText = "Error updating symbols.";
-                    document.getElementById("scanners").innerText = "Error loading scanner data.";
-                    document.getElementById("pool").innerText = "Error loading pool data.";
-                }
-            });
-
-            document.getElementById("logout").addEventListener("click", async () => {
-                try {
-                    await fetch("/logout");
-                    window.location.href = "/login.html"; // Redirect to login page
-                } catch (error) {
-                    console.error("Logout failed", error);
                 }
             });
 
             async function fetchData() {
                 try {
-                    // Fetch Scanners
                     const scannerRes = await fetch("/scanners");
                     if (!scannerRes.ok) throw new Error(`HTTP Error: ${scannerRes.status}`);
                     const scannerData = await scannerRes.json();
 
-                    const scannersDiv = document.getElementById("scanners");
-                    scannersDiv.innerHTML = "";
+                    document.getElementById("scanners").innerHTML = scannerData.scanners
+                        .map(
+                            (scanner) => `
+                        <div class="scanner">
+                            <strong>ID:</strong> ${scanner.id} <br> 
+                            <strong>Symbols:</strong> ${scanner.symbols.join(", ")}
+                        </div>
+                    `
+                        )
+                        .join("");
 
-                    scannerData.scanners.forEach((scanner) => {
-                        const div = document.createElement("div");
-                        div.className = "scanner";
-                        div.innerHTML = `<strong>ID:</strong> ${scanner.id} <br> <strong>Symbols:</strong> ${scanner.symbols.join(", ")}`;
-                        scannersDiv.appendChild(div);
-                    });
-
-                    // Fetch Pool
                     const poolRes = await fetch("/pool");
                     if (!poolRes.ok) throw new Error(`HTTP Error: ${poolRes.status}`);
                     const poolData = await poolRes.json();
 
-                    document.getElementById("pool").innerHTML = `<strong>Total Symbols:</strong> ${poolData.total} <br> <strong>Symbols:</strong> ${poolData.symbols.join(", ")}`;
+                    document.getElementById("pool").innerHTML = `
+                        <strong>Total Symbols:</strong> ${poolData.total} <br> 
+                        <strong>Symbols:</strong> ${poolData.symbols.join(", ")}
+                    `;
 
-                    // ✅ Remove "Symbols updated!" message once data is loaded
                     document.getElementById("status").innerText = "";
                 } catch (error) {
                     console.error("Error fetching scanner/pool data:", error);
@@ -113,7 +258,7 @@
                 }
             }
 
-            // Fetch data initially and refresh every 30 seconds
+            loadFilters();
             fetchData();
             setInterval(fetchData, 30000);
         </script>

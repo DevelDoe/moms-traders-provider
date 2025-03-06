@@ -53,10 +53,21 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(authRoutes);
 app.use(scannerRoutes);
 
+const defaultFilters = {
+    marketCapLowerThan: "30000000",
+    priceMoreThan: "1",
+    priceLowerThan: "7",
+    volumeMoreThan: "100000",
+    exchange: "NASDAQ",
+    isActivelyTrading: "true",
+    isEtf: "false",
+    isFund: "false"
+};
+
 // Schedule the task to run every day at midnight (server time)
 cron.schedule("0 0 * * *", async () => {
-    console.log("Running stock scanner at midnight...");
-    await executeScanner(); // Now correctly imported and accessible
+    console.log("Running stock scanner at midnight with default filters...");
+    await executeScanner(defaultFilters); // ✅ Now correctly passing filters
 });
 
 app.listen(PORT, () => {

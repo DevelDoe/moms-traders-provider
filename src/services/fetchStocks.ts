@@ -1,20 +1,20 @@
 import axios from "axios";
 import { buildQuery } from "../utils/buildQuery";
-import { FMP_KEY, FMP_URL } from "../config"
+import { FMP_KEY, FMP_URL } from "../config";
 
-const filters = {
-    marketCapLowerThan: "30000000",
-    priceMoreThan: "1",
-    priceLowerThan: "7",
-    volumeMoreThan: "100000",
-    exchange: "NASDAQ",
-    isActivelyTrading: "true",
-    isEtf: "false",
-    isFund: "false"
-};
+export async function fetchStocks(filters: Record<string, any>): Promise<any> {
+    const queryFilters = {
+        priceMoreThan: filters.priceMoreThan || "1",
+        priceLowerThan: filters.priceLowerThan || "7",
+        volumeMoreThan: filters.volumeMoreThan || "100000",
+        marketCapLowerThan: filters.marketCapLowerThan || "30000000",
+        exchange: filters.exchange || "NASDAQ",
+        isActivelyTrading: filters.isActivelyTrading || "true",
+        isEtf: filters.isEtf || "false",
+        isFund: filters.isFund || "false",
+    };
 
-export async function fetchStocks(): Promise<any> {
-    const url = buildQuery(FMP_URL, FMP_KEY, filters);
+    const url = buildQuery(FMP_URL, FMP_KEY, queryFilters);
     try {
         const response = await axios.get(url);
         console.log(`FMP Response Status: ${response.status}`);
@@ -24,3 +24,4 @@ export async function fetchStocks(): Promise<any> {
         return null;
     }
 }
+
