@@ -23,4 +23,4 @@ export async function fetchStocks(filters: Record<string, any>): Promise<any> {
         console.error("Error fetching stock data:", error);
         return null;
     }
-}  
+}
