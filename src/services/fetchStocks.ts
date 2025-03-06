@@ -5,8 +5,8 @@ import { FMP_KEY, FMP_URL } from "../config";
 export async function fetchStocks(filters: Record<string, any>): Promise<any> {
     const queryFilters = {
         priceMoreThan: filters.priceMoreThan || "1",
-        priceLowerThan: filters.priceLowerThan || "7",
-        volumeMoreThan: filters.volumeMoreThan || "100000",
+        priceLowerThan: filters.priceLowerThan || "10",
+        volumeMoreThan: filters.volumeMoreThan || "50000",
         marketCapLowerThan: filters.marketCapLowerThan || "30000000",
         exchange: filters.exchange || "NASDAQ",
         isActivelyTrading: filters.isActivelyTrading || "true",

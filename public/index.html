@@ -160,8 +160,8 @@
         <script>
             let filters = {
                 priceMoreThan: "1",
-                priceLowerThan: "7",
-                volumeMoreThan: "100000",
+                priceLowerThan: "10",
+                volumeMoreThan: "50000",
                 marketCapLowerThan: "30000000",
                 exchange: "NASDAQ",
                 isActivelyTrading: "true",
@@ -257,6 +257,15 @@
                     document.getElementById("pool").innerText = "Error loading pool data.";
                 }
             }
+
+            document.getElementById("logout").addEventListener("click", async () => {
+                try {
+                    await fetch("/logout");
+                    window.location.href = "/login.html"; // Redirect to login page
+                } catch (error) {
+                    console.error("Logout failed", error);
+                }
+            });
 
             loadFilters();
             fetchData();

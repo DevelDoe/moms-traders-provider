@@ -60,8 +60,8 @@ router.post("/refresh-pool", requireAuth, async (req: Request, res: Response) =>
     // Ensure filters exist, otherwise fallback to defaults
     const filters = req.body || {
         priceMoreThan: "1",
-        priceLowerThan: "7",
-        volumeMoreThan: "100000",
+        priceLowerThan: "10",
+        volumeMoreThan: "50000",
         marketCapLowerThan: "30000000",
         exchange: "NASDAQ",
         isActivelyTrading: "true",
